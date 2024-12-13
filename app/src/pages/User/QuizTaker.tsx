@@ -4,27 +4,28 @@ import axios from "axios";
 import { RiAiGenerate } from "react-icons/ri";
 import { useAuth } from "../../context/AuthContext";
 
+interface QuestionOption {
+  option_text: string;
+  is_correct: boolean;
+}
+
+interface Question {
+  question_id: string;
+  question_text: string;
+  type: string;
+  options: QuestionOption[];
+  correct_answer: string;
+}
+
 interface Quiz {
   title: string;
   description: string;
   questions: Question[];
 }
 
-interface Question {
-  question_id: string;
-  question_text: string;
-  correct_answer: string;
-  type: string;
-  options?: Option[];
-}
-
-interface Option {
-  option_text: string;
-}
-
 const QuizTakerPage: React.FC = () => {
   const [quiz, setQuiz] = useState<Quiz | null>(null);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [score, setScore] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [explanations, setExplanations] = useState<Record<string, string>>({});
@@ -61,7 +62,6 @@ const QuizTakerPage: React.FC = () => {
   }, [timeLeft]);
 
   if (!isAuthenticated) {
-    // Redirect to home if not logged in
     return <Navigate to="/" replace />;
   }
 
@@ -74,10 +74,16 @@ const QuizTakerPage: React.FC = () => {
   };
 
   const handleAnswerChange = (questionId: string, value: string) => {
-    setAnswers((prevAnswers) => ({
-      ...prevAnswers,
-      [questionId]: value,
-    }));
+    setAnswers((prevAnswers) => {
+      const currentAnswers = prevAnswers[questionId] || [];
+      if (currentAnswers.includes(value)) {
+        // Deselect if already selected
+        return { ...prevAnswers, [questionId]: currentAnswers.filter(val => val !== value) };
+      } else {
+        // Select the value
+        return { ...prevAnswers, [questionId]: [...currentAnswers, value] };
+      }
+    });
   };
 
   const handleAiExplanation = async (questionId: string, questionText: string) => {
@@ -114,9 +120,26 @@ const QuizTakerPage: React.FC = () => {
 
   const handleSubmit = () => {
     let calculatedScore = 0;
+
     quiz!.questions.forEach((question) => {
       const userAnswer = answers[question.question_id];
-      if (userAnswer === question.correct_answer) {
+
+      console.log('userAnswer:', userAnswer[userAnswer.length - 1]);
+      console.log('correctAnswer:', question.correct_answer);
+      if (question.type === "multiple-select") {
+        // For multiple-select, userAnswer is an array of selected values
+        if (userAnswer && Array.isArray(userAnswer)) {
+          const correctAnswers = question.options.filter(option => option.is_correct).map(option => option.option_text.trim());
+          const selectedAnswers = userAnswer.map(ans => ans.trim());
+
+          // Check if the selected answers match exactly with the correct answers
+          const isCorrect = correctAnswers.length === selectedAnswers.length && correctAnswers.every(answer => selectedAnswers.includes(answer));
+
+          if (isCorrect) calculatedScore += 1;
+        }
+      }
+
+      if (userAnswer[userAnswer.length - 1] === question.correct_answer) {
         calculatedScore += 1;
       }
     });
@@ -124,8 +147,8 @@ const QuizTakerPage: React.FC = () => {
     setScore(calculatedScore);
 
     const submissionData = {
-      userId: user?.id || 0, // Fallback value for user ID
-      quizId: parseInt(id!, 10), // Non-null assertion as 'id' is guaranteed
+      userId: user?.id,
+      quizId: parseInt(id!, 10),
       score: calculatedScore,
       totalQuestions: quiz!.questions.length,
     };
@@ -189,7 +212,7 @@ const QuizTakerPage: React.FC = () => {
             {/* Question Options */}
             {question.type === "multiple-choice" && (
               <div className="mt-4">
-                {question.options?.map((option, idx) => (
+                {question.options.map((option, idx) => (
                   <div key={idx} className="flex items-center mb-2">
                     <input
                       type="radio"
@@ -207,7 +230,7 @@ const QuizTakerPage: React.FC = () => {
 
             {question.type === "multiple-select" && (
               <div className="mt-4">
-                {question.options?.map((option, idx) => (
+                {question.options.map((option, idx) => (
                   <div key={idx} className="flex items-center mb-2">
                     <input
                       type="checkbox"
