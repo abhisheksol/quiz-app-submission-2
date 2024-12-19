@@ -14,39 +14,56 @@ const Login: React.FC = () => {
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-
+  
     // Validate input fields
     if (!email || !password || !role) {
       setError("All fields are required.");
       return;
     }
+  
     if (!/\S+@\S+\.\S+/.test(email)) {
       setError("Please enter a valid email address.");
       return;
     }
-
-    
+  
+    try {
       // Make API call
       const response = await axios.post("http://localhost:5000/api/users/login", {
         email,
         password,
         role,
       });
-
+  
       // Extract user data from the response
       const userData = response.data.user;
-
+  
       // Update context
       login(userData);
-
+  
       // Navigate to the appropriate dashboard
       if (userData.role === "admin") {
         navigate("/admin/dashboard");
       } else {
         navigate("/user/dashboard");
       }
-    
+  
+    } catch (error: any) {
+      // Handle errors
+      if (axios.isAxiosError(error)) {
+        // For Axios-specific errors
+        if (error.response?.data?.message) {
+          setError(error.response.data.message); // Use server's error message
+        } else {
+          setError("login is failed due to the wrong credentials");
+          alert("login is failed due to the wrong credentials")
+        }
+      } else {
+        // For other errors (e.g., network issues)
+        setError("An error occurred. Check your connection and try again.");
+      }
+    }
   };
+  
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">

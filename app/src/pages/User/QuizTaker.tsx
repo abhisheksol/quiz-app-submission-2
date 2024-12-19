@@ -120,39 +120,38 @@ const QuizTakerPage: React.FC = () => {
 
   const handleSubmit = () => {
     let calculatedScore = 0;
-
+  
     quiz!.questions.forEach((question) => {
-      const userAnswer = answers[question.question_id];
-
-      console.log('userAnswer:', userAnswer[userAnswer.length - 1]);
-      console.log('correctAnswer:', question.correct_answer);
+      // Use a fallback for unanswered questions
+      const userAnswer = answers[question.question_id] || []; // Default to an empty array if not answered
+  
       if (question.type === "multiple-select") {
-        // For multiple-select, userAnswer is an array of selected values
-        if (userAnswer && Array.isArray(userAnswer)) {
-          const correctAnswers = question.options.filter(option => option.is_correct).map(option => option.option_text.trim());
-          const selectedAnswers = userAnswer.map(ans => ans.trim());
-
-          // Check if the selected answers match exactly with the correct answers
-          const isCorrect = correctAnswers.length === selectedAnswers.length && correctAnswers.every(answer => selectedAnswers.includes(answer));
-
+        if (Array.isArray(userAnswer) && userAnswer.length > 0) {
+          const correctAnswers = question.options
+            .filter((option) => option.is_correct)
+            .map((option) => option.option_text.trim());
+          const selectedAnswers = userAnswer.map((ans) => ans.trim());
+  
+          const isCorrect =
+            correctAnswers.length === selectedAnswers.length &&
+            correctAnswers.every((answer) => selectedAnswers.includes(answer));
+  
           if (isCorrect) calculatedScore += 1;
         }
-      }
-
-      if (userAnswer[userAnswer.length - 1] === question.correct_answer) {
+      } else if (userAnswer.length > 0 && userAnswer[0] === question.correct_answer) {
         calculatedScore += 1;
       }
     });
-
+  
     setScore(calculatedScore);
-
+  
     const submissionData = {
       userId: user?.id,
       quizId: parseInt(id!, 10),
       score: calculatedScore,
       totalQuestions: quiz!.questions.length,
     };
-
+  
     axios
       .post("http://localhost:5000/api/quizzes/submit", submissionData)
       .then((response) => {
@@ -162,6 +161,7 @@ const QuizTakerPage: React.FC = () => {
         console.error("Error submitting score:", err);
       });
   };
+  
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);

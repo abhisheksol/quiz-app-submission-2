@@ -50,7 +50,7 @@ const AdminCreateQuiz: React.FC = () => {
   const handleAiExplanation = async (questionText: string) => {
     try {
       const response = await axios({
-        url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=YOUR_API_KEY",
+        url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyCVPgDqL2UWciZUqdl_GyE6cSjsc3CNjiA",
         method: "post",
         data: {
           contents: [

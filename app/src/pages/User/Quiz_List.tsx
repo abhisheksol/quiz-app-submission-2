@@ -10,6 +10,7 @@ interface Quiz {
   questions_count: number;
   time_limit: number;
   created_by: string;
+  end_date: string;
 }
 
 interface QuizListProps {
@@ -36,8 +37,8 @@ const QuizList: FC<QuizListProps> = ({ isAdmin }) => {
     fetchQuizzes();
   }, []);
 
-  const { isAuthenticated, user, logout } = useAuth();
-  
+  const { isAuthenticated } = useAuth();
+
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
   }
@@ -49,59 +50,70 @@ const QuizList: FC<QuizListProps> = ({ isAdmin }) => {
     return <div className="text-center text-red-500">Error: {error}</div>;
   }
 
+  const now = new Date();
+
   return (
-    <div className="container mx-auto p-6 bg-gray-50">
-      <h1 className="text-3xl font-extrabold text-indigo-700 mb-8 text-center">Available Quizzes</h1>
+    <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
+      <h1 className="text-4xl font-bold text-gray-800 mb-10 text-center">Available Quizzes</h1>
 
       {isAdmin && (
-        <div className="text-center mb-6">
+        <div className="text-center mb-10">
           <Link
             to="/admin/create"
-            className="bg-indigo-600 text-white py-2 px-6 rounded-md shadow-md hover:bg-indigo-700 transition duration-200"
+            className="bg-indigo-600 text-white py-3 px-8 rounded-md shadow-md hover:bg-indigo-700 transition duration-300"
           >
-            Create New Quiz
+            + Create New Quiz
           </Link>
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {quizzes.map((quiz: Quiz) => (
-          <div
-            key={quiz.id}
-            className="bg-white border border-indigo-200 rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow duration-300"
-          >
-            <h2 className="text-2xl font-semibold text-gray-800">{quiz.title}</h2>
-            <p className="text-gray-500 mt-2">{quiz.description}</p>
-            <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
-              <span>{quiz.questions_count} questions</span>
-              <span>Time Limit: {quiz.time_limit} min</span>
-            </div>
-            <div className="mt-2 text-sm text-gray-500">
-              Created by: <span className="font-medium text-gray-700">{quiz.created_by}</span>
-            </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {quizzes.map((quiz: Quiz) => {
+          const isExpired = new Date(quiz.end_date) < now;
+          return (
+            <div
+              key={quiz.id}
+              className="bg-white border border-gray-200 rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow duration-300"
+            >
+              <h2 className="text-xl font-semibold text-gray-700">{quiz.title}</h2>
+              <p className="text-gray-500 mt-2 text-sm">{quiz.description}</p>
+              <div className="flex justify-between items-center mt-4 text-sm text-gray-500">
+                <span>{quiz.questions_count} Questions</span>
+                <span>⏳ {quiz.time_limit} mins</span>
+              </div>
+              <div className="mt-2 text-sm text-gray-500">
+                By: <span className="font-medium text-gray-700">{quiz.created_by}</span>
+              </div>
 
-            {isAdmin ? (
-              <div className="mt-4">
-                <Link
-                  to={`/admin/quizzes/${quiz.id}`}
-                  className="text-indigo-600 hover:text-indigo-800 font-medium"
-                >
-                  Manage Quiz
-                </Link>
-              </div>
-            ) : (
-              <div className="mt-4">
-                <Link
-                  to={`/quiz/${quiz.id}`}
-                  state={{ timer: quiz.time_limit }}
-                  className="text-indigo-600 hover:text-indigo-800 font-medium"
-                >
-                  Take Quiz
-                </Link>
-              </div>
-            )}
-          </div>
-        ))}
+              {isAdmin ? (
+                <div className="mt-4">
+                  <Link
+                    to={`/admin/quizzes/${quiz.id}`}
+                    className="block bg-indigo-100 text-indigo-600 py-2 text-center rounded-md hover:bg-indigo-200 transition duration-300"
+                  >
+                    Manage Quiz
+                  </Link>
+                </div>
+              ) : (
+                <div className="mt-6">
+                  {isExpired ? (
+                    <span className="block bg-red-100 text-red-600 py-2 text-center rounded-md font-medium">
+                      Expired
+                    </span>
+                  ) : (
+                    <Link
+                      to={`/quiz/${quiz.id}`}
+                      state={{ timer: quiz.time_limit }}
+                      className="block bg-indigo-600 text-white py-2 text-center rounded-md hover:bg-indigo-700 transition duration-300"
+                    >
+                      Take Quiz
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
