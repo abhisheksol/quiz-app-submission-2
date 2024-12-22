@@ -4,42 +4,60 @@ import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 
 interface Quiz {
+  id: number;
+  title: string;
+  created_by: string;
+}
+
+interface Result {
+  user_id: number;
   user_name: string;
   score: number;
+  quiz_id: number;
+  total_questions: number;
 }
 
 const AdminDashboard: FC = () => {
-  const { isAuthenticated, user, logout } = useAuth();
-
-  const [quizData, setQuizData] = useState<Quiz[]>([]);
+  const { isAuthenticated, user } = useAuth();
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [quizData, setQuizData] = useState<Result[]>([]);
+  const [adminQuizzes, setAdminQuizzes] = useState<Quiz[]>([]);
 
   useEffect(() => {
-    const fetchQuizResults = async (): Promise<void> => {
+    const fetchAdminData = async () => {
       try {
-        const response = await axios.get<Quiz[]>("http://localhost:5000/api/users/results");
-        setQuizData(response.data);
-      } catch (err) {
-        setError("Failed to fetch quiz data. Please try again.");
+        if (!user) throw new Error("User not authenticated");
+
+        // Step 1: Fetch quizzes created by the admin
+        const quizResponse = await axios.get<Quiz[]>("http://localhost:5000/api/quizzes");
+        const adminQuizzes = quizResponse.data.filter(
+          (quiz) => quiz.created_by === user.name // Match `created_by` with admin's name
+        );
+
+        setAdminQuizzes(adminQuizzes);
+        const adminQuizIds = adminQuizzes.map((quiz) => quiz.id);
+
+        // Step 2: Fetch quiz results and filter by admin's quiz IDs
+        const resultsResponse = await axios.get<Result[]>("http://localhost:5000/api/users/results");
+        const filteredResults = resultsResponse.data.filter((result) =>
+          adminQuizIds.includes(result.quiz_id)
+        );
+
+        setQuizData(filteredResults);
+      } catch (err: any) {
+        setError(err.message || "An error occurred while fetching data");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchQuizResults();
-  }, []);
+    fetchAdminData();
+  }, [user]);
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
   }
-
-  const totalQuizzes: number = quizData.length;
-  const uniqueUsers: number = new Set(quizData.map((quiz) => quiz.user_name)).size;
-  const averageScore: string =
-    quizData.length > 0
-      ? (quizData.reduce((acc, quiz) => acc + quiz.score, 0) / quizData.length).toFixed(2)
-      : "0";
 
   if (loading) {
     return (
@@ -57,10 +75,19 @@ const AdminDashboard: FC = () => {
     );
   }
 
+  // Summary Calculations
+  const totalQuizzes = adminQuizzes.length;
+  const uniqueUsers = new Set(quizData.map((result) => result.user_id)).size;
+  const averageScore =
+    quizData.length > 0
+      ? (quizData.reduce((acc, result) => acc + result.score, 0) / quizData.length).toFixed(2)
+      : "0";
+
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
 
+      {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div className="bg-blue-500 text-white p-4 rounded-lg shadow-md">
           <h2 className="text-xl font-bold">Total Quizzes</h2>
@@ -76,6 +103,7 @@ const AdminDashboard: FC = () => {
         </div>
       </div>
 
+      {/* Links to Manage Quizzes */}
       <div className="space-y-4">
         <Link
           to="/admin/quizzes"

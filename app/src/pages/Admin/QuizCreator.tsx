@@ -50,7 +50,7 @@ const AdminCreateQuiz: React.FC = () => {
   const handleAiExplanation = async (questionText: string) => {
     try {
       const response = await axios({
-        url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyCVPgDqL2UWciZUqdl_GyE6cSjsc3CNjiA",
+        url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyAfAoMqKsgh2VPXR7tV3xF2zze4pDd-KB8",
         method: "post",
         data: {
           contents: [
@@ -134,6 +134,7 @@ const AdminCreateQuiz: React.FC = () => {
   };
 
   const addQuestion = () => {
+    setExplanation('')
     setQuizData({
       ...quizData,
       questions: [

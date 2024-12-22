@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useLocation, Navigate } from "react-router-dom";
+import { useParams, useLocation, Navigate, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { RiAiGenerate } from "react-icons/ri";
 import { useAuth } from "../../context/AuthContext";
@@ -34,13 +34,15 @@ const QuizTakerPage: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const location = useLocation();
   const { timer } = location.state || {}; // Timer duration from route state
-
+  const navigate = useNavigate(); // Use the hook for navigation
+ 
   useEffect(() => {
     axios
       .get<Quiz>(`http://localhost:5000/api/quizzes/${id}`)
       .then((response) => {
         const formattedQuiz = formatQuizData(response.data);
         setQuiz(formattedQuiz);
+        const  l=formattedQuiz.questions.length
         setTimeLeft(timer || 300); // Set timer (default: 5 minutes)
       })
       .catch(() => {
@@ -52,14 +54,21 @@ const QuizTakerPage: React.FC = () => {
   useEffect(() => {
     if (timeLeft === 0) {
       handleSubmit(); // Automatically submit when time is up
+      
+      // Use a timeout to ensure the score is processed properly before navigation
+      setTimeout(() => {
+        alert(`Oops! Time is up. Redirecting to results.`);
+        navigate("/user/1/results");
+      }, 100); // Small delay to avoid race condition
     }
-
+  
     const interval = setInterval(() => {
       setTimeLeft((prevTime) => (prevTime! > 0 ? prevTime! - 1 : 0));
     }, 1000);
-
+  
     return () => clearInterval(interval); // Cleanup on unmount
-  }, [timeLeft]);
+  }, [timeLeft, navigate]);
+  
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
@@ -91,7 +100,7 @@ const QuizTakerPage: React.FC = () => {
 
     try {
       const response = await axios({
-        url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyCVPgDqL2UWciZUqdl_GyE6cSjsc3CNjiA",
+        url: "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyAfAoMqKsgh2VPXR7tV3xF2zze4pDd-KB8",
         method: "post",
         data: {
           contents: [

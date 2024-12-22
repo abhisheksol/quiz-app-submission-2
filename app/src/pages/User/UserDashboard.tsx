@@ -35,10 +35,10 @@ const UserDashboard: FC = () => {
           </Link>
 
           <Link
-            to="/user/profile"
+            to="/leaderboard"
             className="block p-6 bg-yellow-500 text-white font-medium text-lg rounded-lg shadow-md hover:bg-yellow-600 transition"
           >
-            Manage Profile
+            Leaderboard
           </Link>
 
           <Link
