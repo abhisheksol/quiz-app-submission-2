@@ -86,13 +86,13 @@ const AdminCreateQuiz: React.FC = () => {
   ) => {
     const { name, value } = e.target;
     const updatedQuestions = [...quizData.questions];
-  
+
     if (name === 'options') {
       // Update options field
       updatedQuestions[index].options = value.split(',').map(option => option.trim());
     } else if (name === 'questionText' || name === 'type' || name === 'correctAnswer') {
       updatedQuestions[index][name as 'questionText' | 'type' | 'correctAnswer'] = value;
-  
+
       // Update liveQuestionText for AI explanation
       if (name === 'questionText') {
         setLiveQuestionText((prev) => ({
@@ -101,7 +101,7 @@ const AdminCreateQuiz: React.FC = () => {
         }));
       }
     }
-  
+
     setQuizData({ ...quizData, questions: updatedQuestions });
   };
 
@@ -184,73 +184,81 @@ const AdminCreateQuiz: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Create a New Quiz</h1>
+    <div className="container mx-auto p-8 bg-gray-100 rounded-lg shadow-lg">
+       <h1 className="text-3xl font-bold mb-6">Create a New Quiz</h1>
+
       <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-lg font-semibold">Quiz Title:</label>
-          <input
-            type="text"
-            name="title"
-            value={quizData.title}
-            onChange={handleChange}
-            className="w-full p-2 border border-gray-300 rounded-lg"
-            required
-          />
+
+        <div className="m-5 bg-white p-4 border-black shadow-2xl rounded-xl">
+          <div className="mb-4 ">
+            <label className="block text-lg font-semibold">Quiz Title:</label>
+            <input
+              type="text"
+              name="title"
+              value={quizData.title}
+              onChange={handleChange}
+              className="w-full p-2 border border-gray-300 rounded-lg"
+              required
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-lg font-semibold">Quiz Description:</label>
+            <textarea
+              id="description"
+              name="description"
+              value={quizData.description}
+              onChange={handleChange}
+              className="w-full p-2 border border-gray-300 rounded-lg"
+              rows={4}
+              required
+            />
+          </div>
+
+          <div className=" flex m-3">
+            <div className="mb-4  w-1/2 mr-5">
+              <label className="block text-lg font-semibold">Start Date:</label>
+              <input
+                type="datetime-local"
+                id="startDate"
+                name="startDate"
+                value={quizData.startDate}
+                onChange={handleChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+                required
+              />
+            </div>
+
+            <div className="mb-4  w-1/2 ml-2" >
+              <label className="block text-lg font-semibold">End Date:</label>
+              <input
+                type="datetime-local"
+                id="endDate"
+                name="endDate"
+                value={quizData.endDate}
+                onChange={handleChange}
+                className="w-full p-2 border border-gray-300 rounded-lg"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-lg font-semibold">Time Limit (in minutes):</label>
+            <input
+              type="number"
+              id="timeLimit"
+              name="timeLimit"
+              value={quizData.timeLimit}
+              onChange={handleChange}
+              className="w-full p-2 border border-gray-300 rounded-lg"
+              required
+            />
+          </div>
         </div>
 
-        <div className="mb-4">
-          <label className="block text-lg font-semibold">Quiz Description:</label>
-          <textarea
-            id="description"
-            name="description"
-            value={quizData.description}
-            onChange={handleChange}
-            className="w-full p-2 border border-gray-300 rounded-lg"
-            rows={4}
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-lg font-semibold">Start Date:</label>
-          <input
-            type="datetime-local"
-            id="startDate"
-            name="startDate"
-            value={quizData.startDate}
-            onChange={handleChange}
-            className="w-full p-2 border border-gray-300 rounded-lg"
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-lg font-semibold">End Date:</label>
-          <input
-            type="datetime-local"
-            id="endDate"
-            name="endDate"
-            value={quizData.endDate}
-            onChange={handleChange}
-            className="w-full p-2 border border-gray-300 rounded-lg"
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-lg font-semibold">Time Limit (in minutes):</label>
-          <input
-            type="number"
-            id="timeLimit"
-            name="timeLimit"
-            value={quizData.timeLimit}
-            onChange={handleChange}
-            className="w-full p-2 border border-gray-300 rounded-lg"
-            required
-          />
-        </div>
-
+        {/* ------------------------------------------------------------------------------------------------------------- */}
+        <div className="m-5 mt-10 bg-white p-4 border-black shadow-2xl rounded-xl">
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-4">Questions</h2>
           {quizData.questions.map((question, index) => (
@@ -349,7 +357,7 @@ const AdminCreateQuiz: React.FC = () => {
             Add Another Question
           </button>
         </div>
-
+        </div>
         <button
           type="submit"
           className="bg-green-500 text-white p-3 rounded-lg hover:bg-green-700"

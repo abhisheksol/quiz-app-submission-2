@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Bar } from 'react-chartjs-2';
+import { useAuth } from "../../context/AuthContext";
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -30,7 +32,7 @@ const TotalScoreByQuiz = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/users/14/results')
+    axios.get('http://localhost:5000/api/users/results')
       .then((response) => {
         const data: QuizData[] = response.data;
 
