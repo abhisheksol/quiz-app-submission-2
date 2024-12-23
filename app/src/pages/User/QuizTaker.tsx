@@ -3,6 +3,8 @@ import { useParams, useLocation, Navigate, useNavigate } from "react-router-dom"
 import axios from "axios";
 import { RiAiGenerate } from "react-icons/ri";
 import { useAuth } from "../../context/AuthContext";
+import Swal from "sweetalert2";
+import "sweetalert2/dist/sweetalert2.min.css";
 
 interface QuestionOption {
   option_text: string;
@@ -35,14 +37,14 @@ const QuizTakerPage: React.FC = () => {
   const location = useLocation();
   const { timer } = location.state || {}; // Timer duration from route state
   const navigate = useNavigate(); // Use the hook for navigation
- 
+
   useEffect(() => {
     axios
       .get<Quiz>(`http://localhost:5000/api/quizzes/${id}`)
       .then((response) => {
         const formattedQuiz = formatQuizData(response.data);
         setQuiz(formattedQuiz);
-        const  l=formattedQuiz.questions.length
+        const l = formattedQuiz.questions.length
         setTimeLeft(timer || 300); // Set timer (default: 5 minutes)
       })
       .catch(() => {
@@ -54,21 +56,29 @@ const QuizTakerPage: React.FC = () => {
   useEffect(() => {
     if (timeLeft === 0) {
       handleSubmit(); // Automatically submit when time is up
-      
+
       // Use a timeout to ensure the score is processed properly before navigation
       setTimeout(() => {
-        alert(`Oops! Time is up. Redirecting to results.`);
-        navigate("/user/1/results");
+        Swal.fire({
+          title: "Time's Up!",
+          text: `Oops! Time is up. Your responses have been submitted automatically. You scored ${score} out of ${quiz!.questions.length}.`,
+          icon: "warning",
+          confirmButtonText: "View Results",
+          timer: 5000, // Auto-closes the alert
+        }).then(() => {
+          navigate("/user/1/results");
+        });
       }, 100); // Small delay to avoid race condition
     }
-  
+
     const interval = setInterval(() => {
       setTimeLeft((prevTime) => (prevTime! > 0 ? prevTime! - 1 : 0));
     }, 1000);
-  
+
     return () => clearInterval(interval); // Cleanup on unmount
-  }, [timeLeft, navigate]);
-  
+  }, [timeLeft, navigate, score, quiz]);
+
+
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
@@ -129,38 +139,38 @@ const QuizTakerPage: React.FC = () => {
 
   const handleSubmit = () => {
     let calculatedScore = 0;
-  
+
     quiz!.questions.forEach((question) => {
       // Use a fallback for unanswered questions
       const userAnswer = answers[question.question_id] || []; // Default to an empty array if not answered
-  
+
       if (question.type === "multiple-select") {
         if (Array.isArray(userAnswer) && userAnswer.length > 0) {
           const correctAnswers = question.options
             .filter((option) => option.is_correct)
             .map((option) => option.option_text.trim());
           const selectedAnswers = userAnswer.map((ans) => ans.trim());
-  
+
           const isCorrect =
             correctAnswers.length === selectedAnswers.length &&
             correctAnswers.every((answer) => selectedAnswers.includes(answer));
-  
+
           if (isCorrect) calculatedScore += 1;
         }
       } else if (userAnswer.length > 0 && userAnswer[0] === question.correct_answer) {
         calculatedScore += 1;
       }
     });
-  
+
     setScore(calculatedScore);
-  
+
     const submissionData = {
       userId: user?.id,
       quizId: parseInt(id!, 10),
       score: calculatedScore,
       totalQuestions: quiz!.questions.length,
     };
-  
+
     axios
       .post("http://localhost:5000/api/quizzes/submit", submissionData)
       .then((response) => {
@@ -169,14 +179,27 @@ const QuizTakerPage: React.FC = () => {
       .catch((err) => {
         console.error("Error submitting score:", err);
       });
+
+
+
+    Swal.fire({
+      title: "Score Submitted!",
+      text: `You scored ${calculatedScore} out of ${quiz!.questions.length}`,
+      icon: "success",
+      confirmButtonText: "Close",
+      timer: 5000,
+    });
+
+    navigate("/user/1/results");
   };
-  
+
 
   const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
+    const minutes = Math.floor(seconds / 60); // Get the minutes
+    const secs = seconds % 60; // Get the remaining seconds
+    return `${minutes}:${secs < 10 ? "0" : ""}${secs}`; // Display as mm:ss
   };
+
 
   if (error) {
     return <div>{error}</div>;

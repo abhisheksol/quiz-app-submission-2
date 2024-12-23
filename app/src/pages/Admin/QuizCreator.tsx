@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { RiAiGenerate } from "react-icons/ri";
+import Swal from "sweetalert2";
+import "sweetalert2/dist/sweetalert2.min.css";
 
 interface Question {
   questionText: string;
@@ -24,6 +26,7 @@ interface QuizData {
 const AdminCreateQuiz: React.FC = () => {
   const [explanation, setExplanation] = useState<string | undefined>();
   const [liveQuestionText, setLiveQuestionText] = useState<string[]>([]);
+  const navigate = useNavigate();
   const [quizData, setQuizData] = useState<QuizData>({
     title: "",
     description: "",
@@ -158,7 +161,7 @@ const AdminCreateQuiz: React.FC = () => {
       description: quizData.description,
       startDate: quizData.startDate,
       endDate: quizData.endDate,
-      timeLimit: quizData.timeLimit,
+      timeLimit: parseInt(quizData.timeLimit) * 60,
       questions: quizData.questions.map((question) => ({
         questionText: question.questionText,
         type: question.type,
@@ -176,11 +179,21 @@ const AdminCreateQuiz: React.FC = () => {
         payload
       );
       setSuccessMessage("Quiz created successfully!");
+
+      Swal.fire({
+        position: "top-end",
+        icon: "success",
+        title: "Your work has been saved",
+        showConfirmButton: false,
+        timer: 1500
+      });
+
       console.log(response.data);
       console.warn("payload", payload);
     } catch (error) {
       console.error("Error creating quiz:", error);
     }
+    navigate("/admin/quizzes");
   };
 
   return (

@@ -79,7 +79,7 @@ const TotalScoreByQuiz = () => {
 
   return (
     <div className="max-w-4xl mx-auto mt-8">
-      <h2 className="text-2xl font-semibold text-center mb-4">Total Score by Quiz Title</h2>
+      <h2 className="text-2xl font-semibold text-center mb-4">Average Score by Quiz Title</h2>
 
       <div className="w-full h-[50vh]">
         {chartData && (

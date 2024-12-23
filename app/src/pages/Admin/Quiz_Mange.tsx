@@ -1,13 +1,15 @@
 import React, { useState, useEffect, FC } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import "sweetalert2/dist/sweetalert2.min.css"
 
 interface Quiz {
-  id: number;
-  title: string;
-  description: string;
-  questions_count: number;
-  created_by: string;  // Add this property
+    id: number;
+    title: string;
+    description: string;
+    questions_count: number;
+    created_by: string;  // Add this property
 }
 
 const ManageQuizzes: FC = () => {
@@ -16,51 +18,72 @@ const ManageQuizzes: FC = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-      const fetchQuizzes = async (): Promise<void> => {
-          try {
-              const response = await fetch("http://localhost:5000/api/quizzes");
-              const data: Quiz[] = await response.json();
-              
-              console.warn(data);
-              if (user) { // Ensure user is not null
-                  const filteredQuizzes = data.filter(
-                      (quiz) => quiz.created_by === user.name
-                  );
-                  setQuizzes(filteredQuizzes);
-              } else {
-                  console.error("User is not authenticated.");
-              }
-          } catch (error) {
-              console.error("Error fetching quizzes:", error);
-          }
-      };
-  
-      if (isAuthenticated) {
-          fetchQuizzes();
-      }
-  }, [isAuthenticated, user]);
-  
+        const fetchQuizzes = async (): Promise<void> => {
+            try {
+                const response = await fetch("http://localhost:5000/api/quizzes");
+                const data: Quiz[] = await response.json();
+
+                console.warn(data);
+                if (user) { // Ensure user is not null
+                    const filteredQuizzes = data.filter(
+                        (quiz) => quiz.created_by === user.name
+                    );
+                    setQuizzes(filteredQuizzes);
+                } else {
+                    console.error("User is not authenticated.");
+                }
+            } catch (error) {
+                console.error("Error fetching quizzes:", error);
+            }
+        };
+
+        if (isAuthenticated) {
+            fetchQuizzes();
+        }
+    }, [isAuthenticated, user]);
+
 
     if (!isAuthenticated) {
         return <Navigate to="/" replace />;
     }
 
     const handleDelete = async (id: number): Promise<void> => {
-        try {
-            const response = await fetch(`http://localhost:5000/api/quizzes/${id}`, {
-                method: "DELETE",
-            });
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!",
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`http://localhost:5000/api/quizzes/${id}`, {
+                        method: "DELETE",
+                    });
 
-            if (response.ok) {
-                const updatedQuizzes = quizzes.filter((quiz) => quiz.id !== id);
-                setQuizzes(updatedQuizzes);
-                console.log(`Quiz with ID ${id} deleted`);
-            } else {
-                console.error("Failed to delete the quiz");
+                    if (response.ok) {
+                        const updatedQuizzes = quizzes.filter((quiz) => quiz.id !== id);
+                        setQuizzes(updatedQuizzes);
+                        Swal.fire({
+                            title: "Deleted!",
+                            text: "Your quiz has been deleted.",
+                            icon: "success",
+                        });
+                    } else {
+                        console.error("Failed to delete the quiz");
+                    }
+                } catch (error) {
+                    console.error("Error deleting quiz:", error);
+                    Swal.fire({
+                        title: "Error!",
+                        text: "There was an issue deleting the quiz.",
+                        icon: "error",
+                    });
+                }
             }
-        } catch (error) {
-            console.error("Error deleting quiz:", error);
-        }
+        });
     };
 
     const handleEdit = (id: number): void => {
@@ -90,19 +113,24 @@ const ManageQuizzes: FC = () => {
                                 <td className="border border-gray-300 p-2 text-center">
                                     {quiz.questions_count}
                                 </td>
-                                <td className="border border-gray-300 p-2 text-center">
-                                    <button
-                                        className="bg-blue-500 text-white px-3 py-1 rounded mr-2"
-                                        onClick={() => handleEdit(quiz.id)}
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        className="bg-red-500 text-white px-3 py-1 rounded"
-                                        onClick={() => handleDelete(quiz.id)}
-                                    >
-                                        Delete
-                                    </button>
+                                <td className="border border-gray-300 p-2  text-center">
+                                    <div className="py-2 px-8">
+                                        <button
+                                            className="bg-blue-500 text-white px-3 py-1 rounded mr-2"
+                                            onClick={() => handleEdit(quiz.id)}
+                                        >
+                                            Edit
+                                        </button>
+
+                                    </div>
+                                    <div>
+                                        <button
+                                            className="bg-red-500 text-white px-3 py-1 rounded"
+                                            onClick={() => handleDelete(quiz.id)}
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}

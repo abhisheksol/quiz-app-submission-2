@@ -23,7 +23,7 @@ interface QuizListProps {
   isAdmin: boolean;
 }
 
-const MAX_ATTEMPTS = 1;
+const MAX_ATTEMPTS = 5;
 
 const QuizList: FC<QuizListProps> = ({ isAdmin }) => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
