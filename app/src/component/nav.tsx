@@ -27,9 +27,9 @@ const Navbar: FC = () => {
         </div>
 
         <div className="hidden lg:flex gap-4">
-          <Link to="/" className="hover:text-indigo-400 transition duration-200">
+          {/* <Link to="/" className="hover:text-indigo-400 transition duration-200">
             Home
-          </Link>
+          </Link> */}
           {!isAuthenticated && (
             <>
               <Link to="/login" className="hover:text-indigo-400 transition duration-200">
@@ -104,7 +104,7 @@ const Navbar: FC = () => {
             onClick={() => setMenu(false)}
             className="mt-0 mb-8 text-3xl cursor-pointer"
           />
-          <Link to="/" className="font-bold">Home</Link>
+          {/* <Link to="/" className="font-bold">Home</Link> */}
           {!isAuthenticated && (
             <>
               <Link to="/login" className="font-bold">Login</Link>

@@ -1,13 +1,17 @@
 import React, { FC } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from "./context/AuthContext";
 
 const Home: FC = () => {
+  const { isAuthenticated, user } = useAuth();
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
       <div className="max-w-5xl mx-auto text-center p-6">
         <h1 className="text-5xl font-extrabold text-white mb-6">
           Welcome to <span className="text-yellow-300">QuizMaster</span>
         </h1>
+
         <p className="text-lg text-gray-200 mb-10">
           Test your knowledge, challenge your friends, and explore exciting quizzes! Whether you're a participant or an admin, we've got you covered.
         </p>
